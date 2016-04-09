@@ -1,5 +1,8 @@
 Version 1.3
 
+Update:
+04/08: Fixed output of encoding cost. Added overlap encoding for structures.
+
 Code for 
    VoG: Summarizing and Understanding Large Graphs
    Danai Koutra, U Kang, Jilles Vreeken, and Christos Faloutsos
@@ -8,7 +11,7 @@ Code for
 
 Contact:
    Danai Koutra, dkoutra@umich.edu
-
+   Yike Liu, yikeliu@umich.edu
 
 To run:
    type 'make'
