@@ -1,0 +1,69 @@
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+MDL_faster_Step_noClaim
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  The step algorithm in the under-preparation paper. At every iteration
+  we pick the ''best'' structure, that is the structure that minimizes 
+  the total encoding cost.
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+MDL_faster		
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  The greedy heuristic of the original VoG paper made EVEN
+  faster by keeping only the diff of the error structures
+  and using them to revert to a previous state if a newly 
+  added structure is removed from the summary (for not further
+  decreasing the encoding cost)
+
+  SPEEDUP: For epinions, from >30h, the runtime is down to 24 seconds!
+
+           For enron: 9 seconds!
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+MDL_optGreedy_faster
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  The step heuristic of the new work made faster thanks to the
+  diff trick for the error structures.
+
+  SPEEDUP: For epinions, the runtime is 
+
+
+
+
+
+
+.....................................................................
+---------------------------------------------------------------------
+                          OLD CODE / JUNE
+---------------------------------------------------------------------
+.....................................................................
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+MDL_fixed_negative:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  The greedy heuristic of the original VoG paper made faster 
+  by avoiding to recompute the encoding cost from scratch at
+  each structure addition. It is slow, because it copies the 
+  old error structures every time a new structure is temporarily
+  added to the model.
+
+  For enron: 1766 seconds = 29.4 mins
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+MDL_optGreedy
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  The step heuristic of the new work, which adds to the model
+  the "best" structure greedily. That is, it does not consider
+  the structures in order of decreasing encoding cost as suggested
+  in our initial VoG paper. Since that is quadratic to the number
+  of structures, we use a claim based on which if a structure does
+  not help decrease the encoding cost at some point, it will never 
+  do, and thus it's not worth considering it.
+
+
+
+

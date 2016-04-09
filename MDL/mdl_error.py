@@ -38,7 +38,7 @@ def LErrorTypedBinom(G, M, E) :
     #print E.numCellsCovered, E.numCellsExcluded, E.numModellingErrors;
     costM = LU(E.numCellsCovered - E.numCellsExcluded, E.numModellingErrors);
     if config.optVerbosity > 1 : print ' - L_tb(E+)', costM;
-
+	#check set/array to allow duplicates
     # Second encode the unmodelled errors
     #print 'Second encode the unmodelled errors' (excluded cells are always covered!)
     #print posNumEdges - E.numCellsCovered, E.numUnmodelledErrors;
@@ -54,4 +54,26 @@ def LErrorTypedPrefix(G, M, E) :
     costU = LnU(posNumEdges - E.numCellsCovered, E.numUnmodelledErrors);
     if config.optVerbosity > 1 : print ' - L_tp(E-)', costU;
     #print E.numCellsCovered, E.numCellsExcluded, E.numModellingErrors, posNumEdges, E.numUnmodelledErrors;
-    return costM + costU;
+    # cost of encoding the overlapped edges
+    if config.optOverlap : 
+	# possible number of edges overlapped, number of edges overlapped
+	#costO = LnU(E.numCellsCovered - E.numCellsExcluded, E.numEdgeOverlapped);
+	countOverlappedCells = E.listToSet();
+	if config.optDebug :
+		print "overlap counts: " + str(countOverlappedCells);
+	numOverlappedCells = len(countOverlappedCells);
+	if config.optDebug :
+		print "# overlaps: " + str(numOverlappedCells);
+	if numOverlappedCells >= 1 :
+		costO = log(numOverlappedCells, 2);
+		costO += LnU(posNumEdges, posNumEdges-numOverlappedCells);
+		for i in range(len(countOverlappedCells)) :
+			for j in range(len(countOverlappedCells[i])) :
+				if config.optDebug :
+					print "i: " + str(i) + " j: " + str(j);
+				costO += LN(countOverlappedCells[i][j]);
+	else : costO = 0;
+    if config.optOverlap :
+    	return costM + costU + costO;
+    else :
+        return costM + costU;

@@ -16,10 +16,14 @@ class Model :
     numNearBiPartiteCores = 0;
     numCorePeripheries = 0;
     numJellyFishes = 0;
+    # add hyperbolic
+    numHyperbolic = 0;
     
     def __init__(self):
-        self.strucTypes = ["fc","nc","ch","st","bc","nb"]; #,"cp","jf","fod","nod"];
-        self.numStrucTypes = len(self.strucTypes);
+        #self.strucTypes = ["fc","nc","ch","st","bc","nb"]; #,"cp","jf","fod","nod"];
+        # add hyperbolic
+        self.strucTypes = ["fc","nc","ch","st","bc","nb","hb"];
+	self.numStrucTypes = len(self.strucTypes);
         self.structs = [];        
         self.numStructs = 0;
 
@@ -54,7 +58,10 @@ class Model :
         elif struct.isCorePeriphery() :
             self.numCorePeripheries += 1;        
         elif struct.isJellyFish() :
-            self.numJellyFishes += 1;        
+            self.numJellyFishes += 1;
+	# add hyperbolic
+	elif struct.isHyperbolic() :
+            self.numHyperbolic += 1;        
 
     # remove structure struct
     def rmStructure(self, struct) :
@@ -83,7 +90,10 @@ class Model :
         elif struct.isCorePeriphery() :
             self.numCorePeripheries -= 1;        
         elif struct.isJellyFish() :
-            self.numJellyFishes -= 1;        
+            self.numJellyFishes -= 1;
+	# add hyperbolic
+	elif struct.isHyperbolic() :
+            self.numHyperbolic -= 1;        
 
     def load(self, fullpath):
         fg = open(fullpath);
@@ -151,6 +161,10 @@ class Structure :
     def isJellyFish(self):
         return False;
 
+    # add hyperbolic	
+    def isHyperbolic(self):
+        return False;
+
     def load(line) :
         if line[:2] == FullClique.getType() :
             return FullClique.load(line);
@@ -172,6 +186,9 @@ class Structure :
             return CorePeriphery.load(line);
         elif line[:2] == JellyFish.getType() :
             return JellyFish.load(line);
+	# add hyperbolic
+	elif line[:2] == Hyperbolic.getType() :
+            return Hyperbolic.load(line);
     load = staticmethod(load)
 
 class Clique(Structure) :
@@ -581,5 +598,37 @@ class JellyFish(Structure) :
         return JellyFish(sorted(cNodes),sNodes);
     load = staticmethod(load);
 
+# add hyperbolic
+class Hyperbolic(Structure) :
+    numEdges = 0;
+    
+    def __init__(self, nodes, numEdges):
+        self.nodes = nodes;
+        self.numNodes = len(nodes);
+        self.numEdges = numEdges;
 
+    def getType():
+        return "hb";
+    getType = staticmethod(getType);
 
+    def isHyperbolic(self):
+        return True;
+
+    def load(line) :
+        # hb <PL exponent>, 1 2 3 4 ...
+        if line[:2] != Hyperbolic.getType() :
+            return 0;
+        cParts = line[3:].strip().split(',');
+        plExponent = float(cParts[0].strip());
+        
+        sParts = cParts[1].strip().split(' ');
+        
+        nodes = [];
+        for x in sParts :
+            if x.find('-') > 0 :
+                y = x.strip().split('-');
+                nodes.extend([x for x in range(int(y[0]),int(y[1])+1)]);
+            else :
+                nodes.append(int(x));
+        return Hyperbolic(sorted(nodes), plExponent);        
+    load = staticmethod(load);

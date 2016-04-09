@@ -43,9 +43,18 @@ def coverFullClique(G, E, c):
                     if G.hasEdge(i,j) and E.isModellingError(i,j) :
                         # edge exists, but model denied
                         E.delModellingError(i,j);
-                    elif not G.hasEdge(i,j) and not E.isModellingError(i,j) :
+		    elif G.hasEdge(i,j) and not E.isModellingError(i,j) and config.optOverlap :
+                        # edge exists, and modelled
+                        E.addOverlappedError(i,j);
+                    #elif not G.hasEdge(i,j) and not E.isModellingError(i,j) :
                         # edge does not exist, but now we say it does
-                        E.addModellingError(i,j);
+                        #E.addModellingError(i,j);
+		    elif not G.hasEdge(i,j) :
+			# as long as edge doesn't exist, we add the error, including duplicates
+			E.addModellingError(i,j);
+			if config.optDebug:
+				print str(i)+','+str(j);
+				print "modelling error: " + str(E.numModellingErrors);
     return;
 
 
@@ -130,8 +139,14 @@ def coverFullOffDiagonal(G, E, c):
                     if G.hasEdge(i,j) and E.isModellingError(i,j) :
                         # edge exists, but model denied
                         E.delModellingError(i,j);
-                    elif not G.hasEdge(i,j) and not E.isModellingError(i,j) :
+		    elif G.hasEdge(i,j) and not E.isModellingError(i,j) and config.optOverlap :
+                        # edge exists, and modelled
+                        E.addOverlappedError(i,j);
+                    #elif not G.hasEdge(i,j) and not E.isModellingError(i,j) :
                         # edge does not exist, but now we say it does
+                        #E.addModellingError(i,j);
+		    elif not G.hasEdge(i,j) :
+                        # as long as edge doesn't exist, we add the error, including duplicates
                         E.addModellingError(i,j);
     return;
 
@@ -222,12 +237,18 @@ def coverChain(G, E, ch) :
                 if G.hasEdge(i,j) and E.isModellingError(i,j) :
                     # model is wrong in saying no edge
                     E.delModellingError(i,j);
+		elif G.hasEdge(i,j) and not E.isModellingError(i,j) and config.optOverlap :
+                    # there is an edge, and modelled
+                    E.addOverlappedError(i,j);
                 # elif G.hasEdge(i,j) and not E.isModellingError(i,j) :
                 # there is an edge, and we knew that
                 # elif not G.hasEdge(i,j) and E.isModellingError(i,j) :
                 # there is no edge, but we keep saying there is
-                elif not G.hasEdge(i,j) and not E.isModellingError(i,j) :
+                #elif not G.hasEdge(i,j) and not E.isModellingError(i,j) :
                     # there is no edge, but now we say there is
+                    #E.addModellingError(i,j);
+		elif not G.hasEdge(i,j) :
+                    # as long as edge doesn't exist, we add the error, including duplicates
                     E.addModellingError(i,j);
 
     if config.optModelZeroes == True :
@@ -285,13 +306,18 @@ def coverStar(G, E, st) :
                     if E.isModellingError(x,y) :
                         # previously modelled as 0, we fix the error
                         E.delModellingError(x,y);
+		    elif config.optOverlap :
+			# overlapped edge
+			E.addOverlappedError(x,y);
                 else :
                     E.delUnmodelledError(x,y);
                     E.cover(x,y);
             else :
                 if E.isCovered(x,y) :
-                    if not E.isModellingError(x,y) :
-                        E.addModellingError(x,y);
+                    #if not E.isModellingError(x,y) :
+                        #E.addModellingError(x,y);
+		    # add the error, including duplicates
+	    	    E.addModellingError(x,y);
                 else :
                     E.addModellingError(x,y);
                     E.cover(x,y)
@@ -348,6 +374,9 @@ def coverBiPartiteCore(G, E, bc) :
                         if E.isModellingError(i,j) :
                             # model says 0, we fix to 1
                             E.delModellingError(i,j);
+			elif config.optOverlap :
+			    # edge overlapped
+			    E.addOverlappedError(i,j);	
                     else :
                         # model didnt say anything, we fix it
                         E.delUnmodelledError(i,j);
@@ -356,8 +385,10 @@ def coverBiPartiteCore(G, E, bc) :
                     # there is no edge
                     if E.isCovered(i,j) :
                         # but the cell is modelled
-                        if not E.isModellingError(i,j) :
-                            E.addModellingError(i,j); # we make a boo-boo
+                        #if not E.isModellingError(i,j) :
+                            #E.addModellingError(i,j); # we make a boo-boo
+			# add the error, including duplicates
+			E.addModellingError(i,j);
                     else :
                         # the cell is not modelled, yet
                         E.addModellingError(i,j);
@@ -602,3 +633,48 @@ def LcorePeripheryA(cp, M, G, E) :
     cost += LU(G.numNodes, cp.numCoreNodes);    # identify core-nodes
     cost += LU(G.numNodes - cp.numCoreNodes, cp.numSpokes); # identify spoke-nodes
     return cost;
+
+# Encoded Size of s hyperbolic community
+def Lhyperbolic(c, M, G, E) :
+    # update Error, count coverage
+    (cnt0,cnt1) = coverHyperbolic(G, E, c)
+    cost = LR(c.plExponent); # encode PL exponent 
+    cost += LN(c.numNodes);              # encode number of nodes
+    cost += LU(G.numNodes, c.numNodes);  # encode node ids
+    if cnt0+cnt1 > 0 :
+        cost += log(cnt0+cnt1, 2);     # encode probability of a 1 (cnt0+cnt1 is number of cells we describe, upperbounded by numnodes 2)
+        cost += LnU(cnt0+cnt1, cnt1);       # encode the edges
+    return cost;
+	  
+def coverHyperbolic(G, E, c) :
+    # c.nodes is ordered    
+    cnt0 = 0;
+    cnt1 = 0;
+    for i_idx in range(c.numNodes) :
+        i = c.nodes[i_idx];
+        for j_idx in range(i_idx+1, c.numNodes) :
+            j = c.nodes[j_idx];
+            
+            if not E.isExcluded(i,j) :
+                # only if (i,j) is not already modelled perfectly
+                
+                if not E.isCovered(i,j) :
+                    # edge is not modelled yet
+                    if G.hasEdge(i,j) :
+                        # yet there is a real edge, so now we undo an error
+                        E.delUnmodelledError(i,j);
+                    E.coverAndExclude(i,j);
+
+                else :
+                    # edge is already modelled
+                    if E.isModellingError(i,j) :
+                        # but wrongly, we undo that error
+                        E.delModellingError(i,j);
+                    E.exclude(i,j)
+                            
+                if G.hasEdge(i,j) :
+                    cnt1 += 1;
+                else:
+                    cnt0 += 1;
+                
+    return (cnt0,cnt1);

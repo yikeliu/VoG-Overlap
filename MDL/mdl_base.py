@@ -1,4 +1,5 @@
 import config;
+import math;
 
 from math import log,factorial;
 from error import Error;
@@ -37,7 +38,7 @@ def LwC(n,k) :
 # Encoded length of `n` 0/1 entries with `k` 1s (aka, Naive Uniform)
 def LnU(n,k):
     #print 'LnU', n, k
-    if n==0 or k==0 or k==n:
+    if n==0 or k==0 or k==n or k > n:# added case k > n to solve overlap edge issues
         return 0;    
     x = -log(k / float(n),2);
     y = -log((n-k)/float(n),2);
@@ -59,3 +60,31 @@ def LN(z) :
     c = c + i;
     i = log(i,2);
   return c;
+
+# find precision and scale of a number
+def precision_and_scale(x):
+    max_digits = 14;
+    int_part = int(abs(x));
+    magnitude = 1 if int_part == 0 else int(math.log10(int_part)) + 1;
+    if magnitude >= max_digits:
+        return (magnitude, 0);
+    frac_part = abs(x) - int_part;
+    multiplier = 10 ** (max_digits - magnitude);
+    frac_digits = multiplier + int(multiplier * frac_part + 0.5);
+    while frac_digits % 10 == 0:
+        frac_digits /= 10;
+    scale = int(math.log10(frac_digits));
+    return (magnitude + scale, scale);
+
+# encoded size of a truncated real-valued parameter by Rissanen's 1983 Universal code
+def LR(z) :
+    (precision, scale) = precision_and_scale(z);
+    z1 = math.modf(z);
+    z2 = z - z1;
+    z2 = z2 * (10 ** scale);
+    #print z;
+    c = 1;
+    c += LN(scale);
+    c += LN(z1);
+    c += LN(z2);
+    return c; 

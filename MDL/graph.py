@@ -1,3 +1,5 @@
+import re
+
 class Graph :
     def __init__(self):
         self.numNodes = 0;
@@ -13,7 +15,10 @@ class Graph :
         self.edges = [];
         edgeList = [];
         for line in fg :
-            tmp = line.strip().split(',');
+            #tmp = line.strip().split(',');
+	    # add delimiters
+	    tmp = line.strip();
+	    tmp = re.split(',| |\t', tmp);
             if len(tmp) < 2 :
                 continue;
             

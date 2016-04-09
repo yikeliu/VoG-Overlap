@@ -49,6 +49,9 @@ def L(G, M, errorEnc):
         model_cost += M.numJellyFishes * log(M.numJellyFishes / float(M.numStructs), 2);
     if M.numCorePeripheries > 0 :
         model_cost += M.numCorePeripheries * log(M.numCorePeripheries / float(M.numStructs), 2);
+    # add hyperbolic
+    if M.numHyperbolic  > 0 :
+        model_cost += M.numHyperbolic * log(M.numHyperbolic / float(M.numStructs), 2);
 
     # encode the structures
     for struc in M.structs :
@@ -72,7 +75,10 @@ def L(G, M, errorEnc):
             model_cost += LfullOffDiagonal(struc,M,G,E);
         elif struc.isNearOffDiagonal() :
             model_cost += LnearOffDiagonal(struc,M,G,E);
-    
+	# add hyperbolic
+	elif struc.isHyperbolic() :
+            model_cost += Lhyperbolic(struc,M,G,E);    
+
     # encode the error
     error_cost += 0 if E.numCellsCovered == 0 else log(E.numCellsCovered, 2);    # encode number of additive Errors
     if ((G.numNodes * G.numNodes - G.numNodes) / 2) - E.numCellsCovered > 0 :
@@ -139,6 +145,9 @@ def Lgreedy(G, M, errorEnc, time, struc, totalCostOld, Eold, model_cost_struct):
         model_cost += M.numJellyFishes * log(M.numJellyFishes / float(M.numStructs), 2);
     if M.numCorePeripheries > 0 :
         model_cost += M.numCorePeripheries * log(M.numCorePeripheries / float(M.numStructs), 2);
+    # add hyperbolic
+    if M.numHyperbolic  > 0 :
+        model_cost += M.numHyperbolic * log(M.numHyperbolic / float(M.numStructs), 2);
 
     # encode the structures
     if struc.isFullClique() :
@@ -161,6 +170,9 @@ def Lgreedy(G, M, errorEnc, time, struc, totalCostOld, Eold, model_cost_struct):
         model_cost2 += LfullOffDiagonal(struc,M,G,E);
     elif struc.isNearOffDiagonal() :
         model_cost2 += LnearOffDiagonal(struc,M,G,E);
+    # add hyperbolic
+    elif struc.isHyperbolic() :
+        model_cost2 += Lhyperbolic(struc,M,G,E);
     
     # encode the error
     error_cost += 0 if E.numCellsCovered == 0 else log(E.numCellsCovered, 2);    # encode number of additive Errors
