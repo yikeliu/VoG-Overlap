@@ -1,15 +1,17 @@
 #!/bin/bash
 
+data=as-caida
+
 echo ''
 echo -e "\e[34m======== Steps 1 & 2: Subgraph Generation and Labeling  ==========\e[0m"
 matlab -r run_structureDiscovery
 echo ''
 echo 'Structure discovery finished.'
 
-unweighted_graph='DATA/cliqueStarClique.out'
-model='DATA/cliqueStarClique_orderedALL.model'
-modelFile='cliqueStarClique_orderedALL.model'
-modelTop10='DATA/cliqueStarClique_top10ordered.model'
+unweighted_graph='DATA/'$data'.graph'
+model='DATA/'$data'_orderedALL.model'
+modelFile=$data'_orderedALL.model'
+modelTop10='DATA/'$data'_top10ordered.model'
 
 echo ''
 echo -e "\e[34m=============== Step 3: Summary Assembly ===============\e[0m"
@@ -35,7 +37,7 @@ echo ''
 echo -e "\e[31m========= Greedy selection of structures =========\e[0m"
 echo 'Computing the encoding cost...'
 echo ''
-python2.7 MDL/greedySearch_nStop.py $unweighted_graph $model >/dev/null 2>&1
+python2.7 MDL/greedySearch_nStop.py $unweighted_graph $model > DATA/encoding_GnF_$data.out
 cat out_final.out
 rm out_final.out
 mv heuristic* DATA/
