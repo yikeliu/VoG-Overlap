@@ -198,6 +198,8 @@ end
 
 [~, order] = sort([model(:).benefit_notEnc], 'descend');
 model_ordered = model(order);
+save('model.mat','model_ordered');
+copyfile('model.mat','../../DATA/');
 printModel(model_ordered, outfile_ordered);
 all_costs = 0;
 all_costs_incStruct = 0;
